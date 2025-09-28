@@ -49,12 +49,9 @@ HAVING COUNT(cu.customer_id) > 300;`
 
 Выполним запрос для по условию задания.
 
-`SELECT payment_date AS 'дата платежа',
-		amount AS 'стоимость'
-FROM payment
-WHERE payment_date BETWEEN '2005-06-15 00:00:00' AND '2005-06-18 23:59:59'
-	AND amount > 10.00
-ORDER BY payment_date;` 
+`SELECT COUNT(*) AS "Количество фильмов"
+FROM film
+WHERE length > (SELECT AVG(length) FROM film);`   
 
 <img src = "img/2-1.png" width = 60%>
 
@@ -71,10 +68,17 @@ ORDER BY payment_date;`
 
 Выполним запрос для по условию задания.
 
-`SELECT rental_date AS 'дата аренды'
-FROM rental
-ORDER BY rental_date DESC
-LIMIT 5;`
+`SELECT 
+    DATE_FORMAT(payment_date, '%m-%Y') AS payment_month,
+    SUM(amount) AS total_payment_amount,
+    COUNT(rental_id) AS rental_count
+FROM 
+    payment
+GROUP BY 
+    payment_month
+ORDER BY 
+    total_payment_amount DESC
+LIMIT 1;`
 
 <img src = "img/3-1.png" width = 60%>
 
@@ -91,13 +95,22 @@ LIMIT 5;`
 
 Выполним запрос для по условию задания.
 
-`SELECT
-	REPLACE(LOWER(first_name), 'll', 'pp') AS 'Имя',
-	REPLACE(LOWER(last_name), 'll', 'pp') AS 'Фамилия',
-	email AS 'Электронная почта'		
-FROM customer
-WHERE first_name = 'Kelly' OR first_name = 'Willie'
-ORDER BY last_name;`
+`SELECT 
+    s.staff_id AS "ID продавца",
+    CONCAT(first_name, ' ', last_name) AS "Имя продавца",
+    COUNT(payment_id) AS "Количество продаж",
+    CASE 
+        WHEN COUNT(payment_id) > 8000 THEN 'Да'
+        ELSE 'Нет'
+    END AS "Премия"
+FROM 
+    staff s
+LEFT JOIN 
+    payment p ON s.staff_id = p.staff_id
+GROUP BY 
+    s.staff_id, s.first_name, s.last_name
+ORDER BY 
+    "Количество продаж" DESC;`
 
 <img src = "img/4-1.png" width = 60%>
 
@@ -106,19 +119,24 @@ ORDER BY last_name;`
 
 ### Задание 5*.
 
-Найдите фильмы, которые ни разу не брали в аренду..
+Найдите фильмы, которые ни разу не брали в аренду.
 
 #### Решение.
 
 Выполним запрос для по условию задания.
 
-`SELECT
-	LEFT(email, POSITION('@' IN email) - 1) AS 'Имя пользователя',
-    RIGHT(email, LENGTH(email) - POSITION('@' IN email)) AS 'Домен',
-	email AS 'Электронная почта'		
-FROM customer
-WHERE POSITION('@' IN email) > 0
-ORDER BY email;`
+`SELECT 
+    f.film_id,
+    f.title AS "Название",
+    f.description AS "Описание"
+FROM 
+    film f
+LEFT JOIN 
+    inventory i ON f.film_id = i.film_id
+LEFT JOIN 
+    rental r ON i.inventory_id = r.inventory_id
+WHERE 
+    r.rental_id IS NULL;`
 
 <img src = "img/5-1.png" width = 60%>
 
